@@ -1,0 +1,886 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#080a10" />
+    <title>9-pixels</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@400;600&family=Geist+Mono:wght@400&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      :root {
+        color-scheme: dark;
+        --bg: #080a10;
+        --nav-h: 60px;
+        --bar-h: 38px;
+        --white: #e9ebf2;
+        --dark: #11131a;
+        --line: rgba(195, 204, 255, 0.13);
+        --who: #547a58;
+        --projects: #a94343;
+        --current: #b5b6b8;
+        --links: #6553a6;
+      }
+
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        font-family: "Geist", system-ui, sans-serif;
+        background:
+          radial-gradient(
+            ellipse at 50% 44%,
+            rgba(72, 86, 180, 0.14),
+            transparent 50%
+          ),
+          var(--bg);
+        color: var(--white);
+        overflow: hidden;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      #net {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 5;
+        mix-blend-mode: screen;
+      }
+
+      nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: var(--nav-h);
+        background: rgba(8, 10, 16, 0.72);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border-bottom: 1px solid var(--line);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 2rem;
+        z-index: 100;
+      }
+      nav .logo {
+        font-size: 1rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        color: var(--white);
+        text-decoration: none;
+      }
+      nav ul {
+        display: flex;
+        gap: 2rem;
+        list-style: none;
+      }
+      nav ul a {
+        color: var(--white);
+        text-decoration: none;
+        font-size: 0.82rem;
+        opacity: 0.65;
+        transition: opacity 0.2s;
+      }
+      nav ul a:hover,
+      nav ul a:focus-visible {
+        opacity: 1;
+      }
+      nav ul .soon {
+        opacity: 0.3;
+        font-size: 0.82rem;
+      }
+
+      .stage {
+        position: fixed;
+        top: var(--nav-h);
+        left: 0;
+        right: 0;
+        bottom: var(--bar-h);
+        z-index: 1;
+      }
+      .stage svg {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+
+      /* ---- cards: translucent body + darker border of the same hue ---- */
+      .card {
+        cursor: pointer;
+        outline: none;
+        animation: reveal 1.1s cubic-bezier(0.2, 0.75, 0.2, 1) both;
+        animation-delay: calc(var(--i) * 110ms);
+      }
+      .card .base {
+        fill: var(--c);
+        fill-opacity: var(--o, 0.76);
+        stroke: none;
+        transition:
+          fill-opacity 0.35s,
+          filter 0.35s;
+      }
+      .card .grid {
+        fill: url(#grid);
+        pointer-events: none;
+      }
+      .card .spot {
+        fill: url(#spot);
+        pointer-events: none;
+      }
+      .card .edge {
+        fill: none;
+        stroke-width: 3;
+        stroke-linejoin: round;
+        pointer-events: none;
+        stroke: color-mix(in srgb, var(--c) 48%, #000);
+        transition: stroke 0.35s;
+      }
+      .card:hover .base,
+      .card:focus-visible .base {
+        fill-opacity: 0.95;
+        filter: brightness(1.08);
+      }
+      .card:hover .edge,
+      .card:focus-visible .edge {
+        stroke: color-mix(in srgb, var(--c) 70%, #000);
+      }
+      .card:focus-visible .edge {
+        stroke: var(--white);
+      }
+
+      .grain {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        opacity: 0.12;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.92' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.28'/%3E%3C/svg%3E");
+      }
+
+      .texts {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+      }
+      .label {
+        position: absolute;
+        transition: transform 0.45s cubic-bezier(0.2, 0.75, 0.2, 1);
+        text-shadow: 0 1px 14px rgba(0, 0, 0, 0.28);
+      }
+      .label.hot {
+        transform: translate(8px, -3px);
+      }
+      .label h2 {
+        font-family: "Geist", sans-serif;
+        font-size: clamp(1.9rem, 3.8vw, 3.6rem);
+        font-weight: 600;
+        line-height: 0.98;
+        letter-spacing: -0.04em;
+        margin-bottom: 0.8rem;
+      }
+      .label p {
+        font-family: "Geist Mono", ui-monospace, monospace;
+        font-weight: 400;
+        font-size: clamp(0.85rem, 1.2vw, 1.05rem);
+        line-height: 1.6;
+        letter-spacing: -0.01em;
+        opacity: 0.95;
+        max-width: 30ch;
+      }
+
+      /* each label sits inside its own card; positions are % of the stage */
+      .lbl-links {
+        top: 8%;
+        left: calc(3% + 12px);
+      } /* top-left card */
+      .lbl-projects {
+        top: 7%;
+        left: 49%;
+      } /* top-centre card */
+      .lbl-current {
+        top: 65%;
+        left: calc(3% + 12px);
+        color: var(--dark);
+        text-shadow: none;
+        max-width: 30ch;
+      } /* bottom-left card */
+      .lbl-who {
+        right: calc(3% + 12px);
+        bottom: 15%;
+        text-align: right;
+      } /* bottom-right card: mirrors Currently Building */
+      .lbl-who.hot {
+        transform: translate(-8px, -3px);
+      }
+
+      /* Who I Am: two faces stacked in one spot, swapped on first click */
+      .lbl-who {
+        display: grid;
+        justify-items: end;
+        align-items: end;
+      }
+      .lbl-who .face {
+        grid-area: 1 / 1;
+        transition:
+          opacity 0.45s ease,
+          transform 0.45s cubic-bezier(0.2, 0.75, 0.2, 1),
+          visibility 0s;
+      }
+      .lbl-who .face-b {
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(10px);
+        transition:
+          opacity 0.45s ease,
+          transform 0.45s cubic-bezier(0.2, 0.75, 0.2, 1),
+          visibility 0s 0.45s;
+      }
+      .lbl-who .face-b h2 {
+        max-width: 8.5em;
+        text-wrap: balance;
+      }
+      .lbl-who.armed .face-a {
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-10px);
+        transition:
+          opacity 0.45s ease,
+          transform 0.45s cubic-bezier(0.2, 0.75, 0.2, 1),
+          visibility 0s 0.45s;
+      }
+      .lbl-who.armed .face-b {
+        opacity: 1;
+        visibility: visible;
+        transform: none;
+        transition:
+          opacity 0.45s ease 0.1s,
+          transform 0.45s cubic-bezier(0.2, 0.75, 0.2, 1) 0.1s,
+          visibility 0s;
+      }
+      .card.armed .edge {
+        stroke: color-mix(in srgb, var(--c) 78%, #fff);
+      }
+
+      footer {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: var(--bar-h);
+        z-index: 50;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 0 2rem;
+        background: rgba(8, 10, 16, 0.72);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border-top: 1px solid var(--line);
+        font-family: "Geist Mono", ui-monospace, monospace;
+        font-size: 0.72rem;
+        color: rgba(233, 235, 242, 0.6);
+      }
+      footer a {
+        color: inherit;
+        text-underline-offset: 3px;
+        transition: color 0.2s;
+      }
+      footer a:hover,
+      footer a:focus-visible {
+        color: var(--white);
+      }
+
+      .mobile-sections {
+        display: none;
+      }
+
+      @keyframes fade {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+      @keyframes reveal {
+        from {
+          opacity: 0;
+          filter: blur(6px);
+        }
+        to {
+          opacity: 1;
+          filter: blur(0);
+        }
+      }
+
+      @media (max-width: 768px) {
+        html,
+        body {
+          overflow: auto;
+        }
+        nav {
+          padding: 0 1.2rem;
+        }
+        .stage {
+          position: static;
+          margin-top: var(--nav-h);
+          height: auto;
+        }
+        .stage svg,
+        .texts,
+        .grain {
+          display: none;
+        }
+        .mobile-sections {
+          display: flex;
+          flex-direction: column;
+          gap: 18px;
+          padding: 18px;
+        }
+        .mob-sec {
+          display: block;
+          color: inherit;
+          text-decoration: none;
+          min-height: 170px;
+          padding: 1.6rem 1.4rem;
+          background:
+            linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px) 0
+              0 / 28px 28px,
+            linear-gradient(
+                90deg,
+                rgba(255, 255, 255, 0.06) 1px,
+                transparent 1px
+              )
+              0 0 / 28px 28px,
+            color-mix(in srgb, var(--c) 84%, transparent);
+          border: 3px solid color-mix(in srgb, var(--c) 48%, #000);
+          text-shadow: 0 1px 12px rgba(0, 0, 0, 0.25);
+          transition: filter 0.3s;
+        }
+        .mob-sec:active {
+          filter: brightness(1.1);
+        }
+        .mob-sec h2 {
+          font-size: 1.6rem;
+          margin-bottom: 0.5rem;
+        }
+        .mob-sec h2 {
+          font-weight: 600;
+          letter-spacing: -0.035em;
+        }
+        .mob-sec p {
+          font-family: "Geist Mono", ui-monospace, monospace;
+          font-size: 0.9rem;
+          line-height: 1.6;
+          opacity: 0.95;
+        }
+        .mob-who {
+          --c: var(--who);
+        }
+        .mob-who .face-b,
+        .mob-who.armed .face-a {
+          display: none;
+        }
+        .mob-who.armed .face-b {
+          display: block;
+          animation: fade 0.4s ease both;
+        }
+        .mob-projects {
+          --c: var(--projects);
+        }
+        .mob-current {
+          --c: var(--current);
+          color: var(--dark);
+          text-shadow: none;
+        }
+        .mob-links {
+          --c: var(--links);
+        }
+        footer {
+          position: static;
+          height: auto;
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 0.3rem;
+          padding: 0.9rem 1.2rem 1.2rem;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="net" aria-hidden="true"></canvas>
+
+    <nav>
+      <a href="https://9-pixels.dev" class="logo">9-pixels</a>
+      <ul>
+        <li><a href="https://portfolio.9-pixels.dev">For Work</a></li>
+        <li><span class="soon">Contact</span></li>
+      </ul>
+    </nav>
+
+    <div class="stage" id="stage">
+      <svg id="board" xmlns="http://www.w3.org/2000/svg" aria-label="Sections">
+        <defs>
+          <pattern
+            id="grid"
+            width="28"
+            height="28"
+            patternUnits="userSpaceOnUse"
+          >
+            <path
+              d="M28 0H0V28"
+              fill="none"
+              stroke="#fff"
+              stroke-opacity=".1"
+              stroke-width="1"
+            />
+          </pattern>
+          <radialGradient
+            id="spot"
+            gradientUnits="userSpaceOnUse"
+            cx="-999"
+            cy="-999"
+            r="280"
+          >
+            <stop offset="0" stop-color="#cfd6ff" stop-opacity=".22" />
+            <stop offset="1" stop-color="#cfd6ff" stop-opacity="0" />
+          </radialGradient>
+        </defs>
+
+        <a
+          class="card"
+          data-k="links"
+          href="links.html"
+          style="--c: #6553a6; --i: 0"
+          aria-label="More links"
+        >
+          <polygon class="base" />
+          <polygon class="grid" />
+          <polygon class="spot" />
+          <polygon class="edge" />
+        </a>
+        <a
+          class="card"
+          data-k="projects"
+          href="projects.html"
+          style="--c: #a94343; --i: 1"
+          aria-label="Projects"
+        >
+          <polygon class="base" />
+          <polygon class="grid" />
+          <polygon class="spot" />
+          <polygon class="edge" />
+        </a>
+        <a
+          class="card"
+          data-k="current"
+          href="https://nxXtend.9-pixels.dev"
+          style="--c: #b5b6b8; --i: 2; --o: 0.93"
+          aria-label="Currently building"
+        >
+          <polygon class="base" />
+          <polygon class="grid" />
+          <polygon class="spot" />
+          <polygon class="edge" />
+        </a>
+        <a
+          class="card"
+          data-k="who"
+          href="who.html"
+          data-who
+          style="--c: #547a58; --i: 3"
+          aria-label="Who I am"
+        >
+          <polygon class="base" />
+          <polygon class="grid" />
+          <polygon class="spot" />
+          <polygon class="edge" />
+        </a>
+      </svg>
+
+      <div class="grain" aria-hidden="true"></div>
+
+      <div class="texts">
+        <div class="label lbl-links" data-k="links">
+          <h2>More<br />Links</h2>
+          <p>Of course, I won't clutter the site with long links.</p>
+        </div>
+        <div class="label lbl-projects" data-k="projects">
+          <h2>Projects</h2>
+          <p>This is probably why you're here.</p>
+        </div>
+        <div class="label lbl-current" data-k="current">
+          <h2>Currently<br />Building</h2>
+          <p>Currently building nxXtend. Want to know more? Click the card.</p>
+        </div>
+        <div class="label lbl-who" data-k="who">
+          <div class="face face-a">
+            <h2>Who<br />I Am</h2>
+            <p>
+              Well, this one's well known: who I am, my work philosophy, and so
+              on.
+            </p>
+          </div>
+          <div class="face face-b" aria-hidden="true">
+            <h2>Curious about me? Weird.</h2>
+            <p>Click again to go to the page.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="mobile-sections">
+        <a class="mob-sec mob-links" href="links.html"
+          ><h2>More Links</h2>
+          <p>Of course, I won't clutter the site with long links.</p></a
+        >
+        <a class="mob-sec mob-projects" href="projects.html"
+          ><h2>Projects</h2>
+          <p>This is probably why you're here.</p></a
+        >
+        <a class="mob-sec mob-current" href="https://nxXtend.9-pixels.dev"
+          ><h2>Currently Building</h2>
+          <p>
+            Currently building nxXtend. Want to know more? Click the card.
+          </p></a
+        >
+        <a class="mob-sec mob-who" href="who.html" data-who>
+          <div class="face-a">
+            <h2>Who I Am</h2>
+            <p>
+              Well, this one's well known: who I am, my work philosophy, and so
+              on.
+            </p>
+          </div>
+          <div class="face-b">
+            <h2>Curious about me? Weird.</h2>
+            <p>Click again to go to the page.</p>
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <footer>
+      <span
+        >© 2026 9-pixels · Code licensed under
+        <a
+          href="https://www.gnu.org/licenses/gpl-3.0.html"
+          target="_blank"
+          rel="noopener"
+          >GPL v3</a
+        ></span
+      >
+
+      <!--  vibe coded — built on Cloudflare Pages  -->
+    </footer>
+
+    <script>
+      /* ---------- cards geometry (shared vertices, in % of the stage) ---------- */
+      const GAP = 26; // space between cards in px (edge-to-edge)
+      const BW = 3; // border width in px
+      const shapes = {
+        links: [
+          [0, 0],
+          [33.86, 0],
+          [46.18, 40.22],
+          [0, 53.56],
+        ], // top-left
+        projects: [
+          [33.86, 0],
+          [100, 0],
+          [50.65, 53.93],
+          [46.18, 40.22],
+        ], // top-centre
+        current: [
+          [0, 53.56],
+          [46.18, 40.22],
+          [50.65, 53.93],
+          [64.55, 100],
+          [0, 100],
+        ], // bottom-left
+        who: [
+          [100, 0],
+          [100, 100],
+          [64.55, 100],
+          [50.65, 53.93],
+        ], // bottom-right
+      };
+
+      // offset a convex polygon inward by d px
+      function inset(p, d) {
+        const n = p.length;
+        let a = 0;
+        for (let i = 0; i < n; i++) {
+          const q = p[(i + 1) % n];
+          a += p[i][0] * q[1] - q[0] * p[i][1];
+        }
+        const s = a > 0 ? 1 : -1;
+        const L = p.map((pt, i) => {
+          const q = p[(i + 1) % n],
+            dx = q[0] - pt[0],
+            dy = q[1] - pt[1],
+            len = Math.hypot(dx, dy);
+          const ux = dx / len,
+            uy = dy / len;
+          return { x: pt[0] + s * -uy * d, y: pt[1] + s * ux * d, ux, uy };
+        });
+        return p.map((_, i) => {
+          const A = L[(i - 1 + n) % n],
+            B = L[i];
+          const den = A.ux * B.uy - A.uy * B.ux;
+          if (Math.abs(den) < 1e-9) return [B.x, B.y];
+          const t = ((B.x - A.x) * B.uy - (B.y - A.y) * B.ux) / den;
+          return [A.x + t * A.ux, A.y + t * A.uy];
+        });
+      }
+
+      const stage = document.getElementById("stage");
+      const board = document.getElementById("board");
+      const spot = document.getElementById("spot");
+
+      let currentPts = {};
+      let targetPts = {};
+      let rafId = null;
+      const LERP_SPEED = 0.12;
+
+      function lerp(a, b, t) {
+        return a + (b - a) * t;
+      }
+
+      function applyPts() {
+        let hasMore = false;
+        board.querySelectorAll(".card").forEach((g) => {
+          const k = g.dataset.k;
+          if (!currentPts[k] || !targetPts[k]) return;
+
+          const cur = currentPts[k];
+          const tgt = targetPts[k];
+
+          const interpolated = cur.map((pt, i) => {
+            const nx = lerp(pt[0], tgt[i][0], LERP_SPEED);
+            const ny = lerp(pt[1], tgt[i][1], LERP_SPEED);
+            if (
+              Math.abs(nx - tgt[i][0]) > 0.05 ||
+              Math.abs(ny - tgt[i][1]) > 0.05
+            ) {
+              hasMore = true;
+            }
+            return [nx, ny];
+          });
+
+          currentPts[k] = interpolated;
+          const str = interpolated
+            .map((v) => v[0].toFixed(1) + "," + v[1].toFixed(1))
+            .join(" ");
+          g.querySelectorAll("polygon").forEach((pl) =>
+            pl.setAttribute("points", str),
+          );
+        });
+
+        if (hasMore) {
+          rafId = requestAnimationFrame(applyPts);
+        } else {
+          rafId = null;
+        }
+      }
+
+      function layout() {
+        const w = stage.clientWidth,
+          h = stage.clientHeight;
+        if (!w || !h) return;
+        board.setAttribute("viewBox", `0 0 ${w} ${h}`);
+
+        board.querySelectorAll(".card").forEach((g) => {
+          const k = g.dataset.k;
+          const pts = shapes[k].map(([x, y]) => [(x * w) / 100, (y * h) / 100]);
+          const insetted = inset(pts, GAP / 2 + BW / 2);
+          targetPts[k] = insetted;
+          if (!currentPts[k]) currentPts[k] = insetted;
+        });
+
+        if (!rafId) rafId = requestAnimationFrame(applyPts);
+      }
+
+      new ResizeObserver(layout).observe(stage);
+      layout();
+
+      /* ---------- interaction: open, label lift, spotlight ---------- */
+      const labels = {};
+      document
+        .querySelectorAll(".label")
+        .forEach((l) => (labels[l.dataset.k] = l));
+      board.querySelectorAll(".card").forEach((g) => {
+        const k = g.dataset.k;
+        g.addEventListener("mouseenter", () => labels[k].classList.add("hot"));
+        g.addEventListener("mouseleave", () =>
+          labels[k].classList.remove("hot"),
+        );
+        g.addEventListener("focus", () => labels[k].classList.add("hot"));
+        g.addEventListener("blur", () => labels[k].classList.remove("hot"));
+      });
+
+      /* Who I Am: first click swaps the card's content, second click follows the link */
+      const whoEls = document.querySelectorAll("[data-who]");
+      const whoCard = board.querySelector("[data-who]");
+      function setWho(on) {
+        labels.who.classList.toggle("armed", on);
+        labels.who.querySelector(".face-a").setAttribute("aria-hidden", on);
+        labels.who.querySelector(".face-b").setAttribute("aria-hidden", !on);
+        whoEls.forEach((el) => el.classList.toggle("armed", on));
+        whoCard.setAttribute(
+          "aria-label",
+          on ? "Click again to open the Who I Am page" : "Who I am",
+        );
+      }
+      whoEls.forEach((el) => {
+        el.addEventListener("click", (e) => {
+          if (!el.classList.contains("armed")) {
+            e.preventDefault();
+            setWho(true);
+          }
+        });
+        el.addEventListener("mouseleave", () => setWho(false));
+        el.addEventListener("blur", () => setWho(false));
+      });
+      document.addEventListener("click", (e) => {
+        if (!e.target.closest("[data-who]")) setWho(false);
+      });
+
+      let mx = -999,
+        my = -999; // viewport coordinates
+      window.addEventListener(
+        "pointermove",
+        (e) => {
+          mx = e.clientX;
+          my = e.clientY;
+          const r = stage.getBoundingClientRect();
+          spot.setAttribute("cx", mx - r.left);
+          spot.setAttribute("cy", my - r.top);
+        },
+        { passive: true },
+      );
+      window.addEventListener("pointerleave", () => {
+        mx = my = -999;
+        spot.setAttribute("cx", -999);
+      });
+
+      /* ---------- background: slow drifting node network ---------- */
+      (() => {
+        const cv = document.getElementById("net"),
+          ctx = cv.getContext("2d");
+        const calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
+        let W = 0,
+          H = 0,
+          pts = [],
+          raf = 0;
+        const LINK = 120,
+          MOUSE = 170;
+
+        function size() {
+          const dpr = Math.min(devicePixelRatio || 1, 2);
+          W = innerWidth;
+          H = innerHeight;
+          cv.width = W * dpr;
+          cv.height = H * dpr;
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          const n = Math.min(95, Math.floor((W * H) / 14000));
+          pts = Array.from({ length: n }, () => ({
+            x: Math.random() * W,
+            y: Math.random() * H,
+            vx: (Math.random() - 0.5) * 0.22,
+            vy: (Math.random() - 0.5) * 0.22,
+            r: Math.random() * 1.1 + 0.35,
+            ph: Math.random() * 6.28,
+          }));
+        }
+
+        function frame(t) {
+          ctx.clearRect(0, 0, W, H);
+          for (const p of pts) {
+            if (!calm) {
+              p.x += p.vx;
+              p.y += p.vy;
+              if (p.x < -10) p.x = W + 10;
+              else if (p.x > W + 10) p.x = -10;
+              if (p.y < -10) p.y = H + 10;
+              else if (p.y > H + 10) p.y = -10;
+              const dx = p.x - mx,
+                dy = p.y - my,
+                d = Math.hypot(dx, dy);
+              if (d < 110 && d > 0) {
+                p.x += (dx / d) * 0.35;
+                p.y += (dy / d) * 0.35;
+              } // gentle push away from cursor
+            }
+          }
+          for (let i = 0; i < pts.length; i++) {
+            const a = pts[i];
+            for (let j = i + 1; j < pts.length; j++) {
+              const b = pts[j],
+                d = Math.hypot(a.x - b.x, a.y - b.y);
+              if (d < LINK) {
+                ctx.strokeStyle = `rgba(150,170,255,${(1 - d / LINK) * 0.16})`;
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(a.x, a.y);
+                ctx.lineTo(b.x, b.y);
+                ctx.stroke();
+              }
+            }
+            const dm = Math.hypot(a.x - mx, a.y - my);
+            if (dm < MOUSE) {
+              ctx.strokeStyle = `rgba(118,228,247,${(1 - dm / MOUSE) * 0.32})`;
+              ctx.beginPath();
+              ctx.moveTo(a.x, a.y);
+              ctx.lineTo(mx, my);
+              ctx.stroke();
+            }
+            const tw = calm ? 1 : 0.7 + 0.3 * Math.sin(t * 0.0015 + a.ph);
+            ctx.fillStyle = `rgba(190,202,255,${0.55 * tw})`;
+            ctx.beginPath();
+            ctx.arc(a.x, a.y, a.r, 0, 6.283);
+            ctx.fill();
+          }
+          if (!calm) raf = requestAnimationFrame(frame);
+        }
+
+        size();
+        frame(0);
+        if (!calm) raf = requestAnimationFrame(frame);
+        addEventListener("resize", size, { passive: true });
+        document.addEventListener("visibilitychange", () => {
+          // don't burn battery in background tabs
+          if (calm) return;
+          if (document.hidden) cancelAnimationFrame(raf);
+          else raf = requestAnimationFrame(frame);
+        });
+      })();
+    </script>
+  </body>
+</html>
